@@ -32,7 +32,7 @@ func (d *torchere) GetDeviceInfo() ya_sdk.DeviceInfo {
 				Parameters: ya_sdk.RangeParameters{
 					Instance:     ya_sdk.CapabilityInstanceBrightness,
 					RandomAccess: false,
-					Range:        ya_sdk.Range{Max: 100, Min: 10, Precision: 10},
+					Range:        ya_sdk.Range{Max: 100, Min: 0, Precision: 10},
 					Unit:         ya_sdk.CapabilityUnitPercent,
 				},
 			},
