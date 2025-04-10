@@ -1,11 +1,15 @@
 package ya_sdk
 
+const (
+	DeviceTypeLight = "devices.types.light"
+)
+
 type DeviceInfo struct {
 	Id           string             `json:"id"`
 	Name         string             `json:"name"`
 	Description  string             `json:"description,omitempty""`
-	Room         string             `json:"room,omitempty`
-	Type         string             `json:"type`
+	Room         string             `json:"room,omitempty"`
+	Type         string             `json:"type"`
 	Capabilities []DeviceCapability `json:"capabilities"`
 	Properties   []DeviceProperty   `json:"properties"`
 }

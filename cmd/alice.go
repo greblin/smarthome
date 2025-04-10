@@ -7,6 +7,10 @@ import (
 	"github.com/greblin/smarthome/ya_sdk"
 )
 
+const (
+	userId = "greblin" //так как навык приватный и не предполагает наличия внутренней системы пользователей, просто хардкод
+)
+
 type device interface {
 	GetDeviceInfo() ya_sdk.DeviceInfo
 }
@@ -26,7 +30,6 @@ func Handler(ctx context.Context, request ya_sdk.Request) (*ya_sdk.Response, err
 }
 
 func discovery(ctx context.Context, request ya_sdk.Request) (*ya_sdk.DiscoveryPayload, error) {
-	userId := "greblin"
 	devices := []device{living_room.InitTorchere()}
 	info := make([]ya_sdk.DeviceInfo, 0, len(devices))
 	for _, d := range devices {
