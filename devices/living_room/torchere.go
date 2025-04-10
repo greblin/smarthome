@@ -16,11 +16,27 @@ func InitTorchere() *torchere {
 
 func (d *torchere) GetDeviceInfo() ya_sdk.DeviceInfo {
 	return ya_sdk.DeviceInfo{
-		Id:           torchereDeviceId,
-		Name:         torchereDeviceName,
-		Room:         roomName,
-		Type:         ya_sdk.DeviceTypeLight,
-		Capabilities: []ya_sdk.DeviceCapability{},
-		Properties:   []ya_sdk.DeviceProperty{},
+		Id:   torchereDeviceId,
+		Name: torchereDeviceName,
+		Room: roomName,
+		Type: ya_sdk.DeviceTypeLight,
+		Capabilities: []ya_sdk.DeviceCapability{
+			{
+				Type:        ya_sdk.CapabilityTypeOnOff,
+				Retrievable: false,
+				Parameters:  ya_sdk.OnOffParameters{Split: true},
+			},
+			{
+				Type:        ya_sdk.CapabilityTypeRange,
+				Retrievable: false,
+				Parameters: ya_sdk.RangeParameters{
+					Instance:     ya_sdk.CapabilityInstanceBrightness,
+					RandomAccess: false,
+					Range:        ya_sdk.Range{Max: 8, Min: 1, Precision: 1},
+					Unit:         ya_sdk.CapabilityUnitPercent,
+				},
+			},
+		},
+		Properties: []ya_sdk.DeviceProperty{},
 	}
 }

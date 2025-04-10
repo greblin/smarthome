@@ -1,9 +1,8 @@
 package ya_sdk
 
 type Response struct {
-	RequestId  string            `json:"request_id"`
-	DiscoveryP *DiscoveryPayload `json:"payload,omitempty"`
-	//  QueryP *QueryPayload `json:"payload,omitempty"`
+	RequestId string `json:"request_id"`
+	P         any    `json:"payload,omitempty"`
 }
 
 type DiscoveryPayload struct {

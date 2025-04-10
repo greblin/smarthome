@@ -20,7 +20,7 @@ func Handler(ctx context.Context, request ya_sdk.Request) (*ya_sdk.Response, err
 	switch request.RequestType {
 	case ya_sdk.RequestTypeDiscovery:
 		if p, err := discovery(ctx, request); err == nil {
-			rsp.DiscoveryP = p
+			rsp.P = p
 			return rsp, nil
 		} else {
 			return nil, err
