@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e4328cd-0c0b-4d08-8857-3a967e5e7373" name="Changes" comment="" />
+    <list default="true" id="2e4328cd-0c0b-4d08-8857-3a967e5e7373" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/cmd/alice.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmd/test_http_server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/devices/living_room/torchere.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_requests/discovery.http" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ya_sdk/device.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ya_sdk/request.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ya_sdk/response.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,12 +22,19 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Go File" />
         <option value="UML Sequence" />
+        <option value="HTTP Request" />
+        <option value="Go File" />
       </list>
     </option>
   </component>
   <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../go1.22.3" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -44,6 +60,13 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/devices/living-room" />
+      <recent name="$PROJECT_DIR$/ya_sdk" />
+      <recent name="$PROJECT_DIR$/requests" />
+    </key>
+  </component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -51,7 +74,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Go Build.go build test.go">
+  <component name="RunManager" selected="Go Build.Smarthome">
     <configuration name="Smarthome" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="smarthome" />
       <working_directory value="$PROJECT_DIR$" />
@@ -79,8 +102,12 @@
       <filePath value="$APPLICATION_CONFIG_DIR$/scratches/test.go" />
       <method v="2" />
     </configuration>
+    <configuration name="discovery | #1" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$PROJECT_DIR$/test_requests/discovery.http" requestIdentifier="#1" runType="Run single request">
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="HTTP Request.discovery | #1" />
         <item itemvalue="Go Build.go build test.go" />
       </list>
     </recent_temporary>

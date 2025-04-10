@@ -1,0 +1,57 @@
+POST http://localhost:8080
+Content-Type: application/json
+Content-Length: 142
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "headers": {
+    "authorization":"##########",
+    "request_id":"b490b3c6-479c-4328-96b0-07504d1188a5"
+  },
+  "request_type":"discovery"
+}
+
+<> 2025-04-11T001021.200.json
+
+###
+
+POST http://localhost:8080
+Content-Type: application/json
+Content-Length: 142
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "headers": {
+    "authorization":"##########",
+    "request_id":"b490b3c6-479c-4328-96b0-07504d1188a5"
+  },
+  "request_type":"discovery"
+}
+
+<> 2025-04-11T000900.200.json
+
+###
+
+POST http://localhost:8080
+Content-Type: application/json
+Content-Length: 142
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "headers": {
+    "authorization":"##########",
+    "request_id":"b490b3c6-479c-4328-96b0-07504d1188a5"
+  },
+  "request_type":"discovery"
+}
+
+<> 2025-04-10T235641.200.json
+
+###
+
