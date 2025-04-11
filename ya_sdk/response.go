@@ -13,3 +13,7 @@ type DiscoveryResponsePayload struct {
 type QueryResponsePayload struct {
 	Devices []DeviceState `json:"devices"`
 }
+
+type ActionResponsePayload struct {
+	Devices []DeviceActionResult `json:"devices"`
+}

@@ -1,10 +1,16 @@
 package ya_sdk
 
+import (
+	"encoding/json"
+	"github.com/pkg/errors"
+)
+
 const (
 	DeviceTypeLight              = "devices.types.light"
 	CapabilityTypeOnOff          = "devices.capabilities.on_off"
 	CapabilityTypeRange          = "devices.capabilities.range"
 	CapabilityTypeColorSettings  = "devices.capabilities.color_setting"
+	CapabilityInstanceOn         = "on"
 	CapabilityInstanceBrightness = "brightness"
 	CapabilityUnitPercent        = "unit.percent"
 )
@@ -58,8 +64,11 @@ type ColorTemperatureRange struct {
 }
 
 type CapabilityState struct {
-	Instance string `json:"instance"`
-	Value    any    `json:"value"`
+	Type  string `json:"type"`
+	State struct {
+		Instance string `json:"instance"`
+		Value    any    `json:"value"`
+	} `json:"state"`
 }
 
 type DeviceState struct {
@@ -68,4 +77,47 @@ type DeviceState struct {
 	Properties   []PropertyState   `json:"properties"`
 	ErrorCode    string            `json:"error_code"`
 	ErrorMessage string            `json:"error_message"`
+}
+
+type DeviceActionResult struct {
+	Id           string       `json:"id"`
+	ActionResult ActionResult `json:"action_result"`
+}
+
+type ActionResult struct {
+	Status       string `json:"status"`
+	ErrorCode    string `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
+}
+
+func (s *CapabilityState) UnmarshalJSON(data []byte) error {
+	sShadow := struct {
+		Type  string `json:"type"`
+		State struct {
+			Instance string `json:"instance"`
+			Value    any    `json:"value"`
+		} `json:"state"`
+	}{}
+	if err := json.Unmarshal(data, &sShadow); err != nil {
+		return errors.Wrap(err, "on unmarshal capability state shadow")
+	}
+	s.Type = sShadow.Type
+	s.State.Instance = sShadow.State.Instance
+	switch s.Type {
+	case CapabilityTypeOnOff:
+		switch s.State.Instance {
+		case CapabilityInstanceOn:
+			if v, ok := sShadow.State.Value.(bool); ok {
+				s.State.Value = v
+			} else {
+				return errors.Errorf("bad value type for type-instance pair: %s %s", s.Type, s.State.Instance)
+			}
+		default:
+			return errors.Errorf("unsupported capability type-instance pair: %s %s", s.Type, s.State.Instance)
+		}
+	default:
+		return errors.Errorf("unsupported capability type: %s", s.Type)
+	}
+
+	return nil
 }

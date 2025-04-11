@@ -15,6 +15,7 @@ type device interface {
 	GetId() string
 	Discovery() ya_sdk.DeviceInfo
 	Query() ya_sdk.DeviceState
+	Actions([]ya_sdk.CapabilityState) ya_sdk.DeviceActionResult
 }
 
 type AliceModule struct {
@@ -38,6 +39,9 @@ func (m *AliceModule) ProcessRequest(ctx context.Context, request ya_sdk.Request
 		return rsp, nil
 	case ya_sdk.RequestTypeQuery:
 		rsp.Payload = m.query(ctx, request.Payload.(ya_sdk.QueryRequestPayload))
+		return rsp, nil
+	case ya_sdk.RequestTypeAction:
+		rsp.Payload = m.action(ctx, request.Payload.(ya_sdk.ActionRequestPayload))
 		return rsp, nil
 	}
 	return nil, fmt.Errorf("unsupported request type: %s", request.RequestType)
@@ -67,7 +71,24 @@ func (m *AliceModule) query(ctx context.Context, payload ya_sdk.QueryRequestPayl
 			})
 		}
 	}
-	return &ya_sdk.QueryResponsePayload{
-		Devices: stateList,
+	return &ya_sdk.QueryResponsePayload{Devices: stateList}
+}
+
+func (m *AliceModule) action(ctx context.Context, payload ya_sdk.ActionRequestPayload) *ya_sdk.ActionResponsePayload {
+	resultList := make([]ya_sdk.DeviceActionResult, 0, len(payload.Devices))
+	for _, d := range payload.Devices {
+		if device, exists := m.registry[d.Id]; exists {
+			resultList = append(resultList, device.Actions(d.Capabilities))
+		} else {
+			resultList = append(resultList, ya_sdk.DeviceActionResult{
+				Id: d.Id,
+				ActionResult: ya_sdk.ActionResult{
+					Status:       "ERROR",
+					ErrorCode:    "DEVICE_NOT_FOUND",
+					ErrorMessage: "Данное устройство вам не принадлежит.",
+				},
+			})
+		}
 	}
+	return &ya_sdk.ActionResponsePayload{Devices: resultList}
 }

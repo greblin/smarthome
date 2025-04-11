@@ -69,3 +69,14 @@ func (d *torchere) Query() ya_sdk.DeviceState {
 		ErrorMessage: "",
 	}
 }
+
+func (d *torchere) Actions([]ya_sdk.CapabilityState) ya_sdk.DeviceActionResult {
+	return ya_sdk.DeviceActionResult{
+		Id: d.GetId(),
+		ActionResult: ya_sdk.ActionResult{
+			Status:       "DONE",
+			ErrorCode:    "",
+			ErrorMessage: "",
+		},
+	}
+}

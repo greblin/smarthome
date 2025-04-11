@@ -30,6 +30,13 @@ type QueryRequestPayload struct {
 	} `json:"devices"`
 }
 
+type ActionRequestPayload struct {
+	Devices []struct {
+		Id           string            `json:"id"`
+		Capabilities []CapabilityState `json:"capabilities"`
+	} `json:"devices"`
+}
+
 func (rq *Request) UnmarshalJSON(data []byte) error {
 	rqShadow := struct {
 		Headers     Headers `json:"headers"`
@@ -44,13 +51,21 @@ func (rq *Request) UnmarshalJSON(data []byte) error {
 	rq.ApiVersion = rqShadow.ApiVersion
 	switch rqShadow.RequestType {
 	case RequestTypeQuery:
-		queryRqParamsShadow := struct {
+		queryRqShadow := struct {
 			Payload QueryRequestPayload `json:"payload"`
 		}{}
-		if err := json.Unmarshal(data, &queryRqParamsShadow); err != nil {
-			return errors.Wrap(err, "on unmarshal query request params shadow")
+		if err := json.Unmarshal(data, &queryRqShadow); err != nil {
+			return errors.Wrap(err, "on unmarshal query request shadow")
 		}
-		rq.Payload = queryRqParamsShadow.Payload
+		rq.Payload = queryRqShadow.Payload
+	case RequestTypeAction:
+		actionRqShadow := struct {
+			Payload ActionRequestPayload `json:"payload"`
+		}{}
+		if err := json.Unmarshal(data, &actionRqShadow); err != nil {
+			return errors.Wrap(err, "on unmarshal action request shadow")
+		}
+		rq.Payload = actionRqShadow.Payload
 	}
 	return nil
 }
