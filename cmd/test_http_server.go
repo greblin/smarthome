@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/greblin/smarthome/ya_sdk"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 )
@@ -28,6 +29,9 @@ func TestHandler(rw http.ResponseWriter, rq *http.Request) {
 }
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file:", err)
+	}
 	http.HandleFunc("/", TestHandler)
 	log.Println("Server is running on port 8080")
 	http.ListenAndServe(":8080", nil)

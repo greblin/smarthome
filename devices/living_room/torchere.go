@@ -1,17 +1,33 @@
 package living_room
 
-import "github.com/greblin/smarthome/ya_sdk"
+import (
+	"github.com/greblin/smarthome/devices/common"
+	"github.com/greblin/smarthome/tuya"
+	"github.com/greblin/smarthome/ya_sdk"
+	"github.com/pkg/errors"
+	"log"
+	"strings"
+)
 
 const (
-	torchereDeviceId   = "living-room-torchere"
+	torchereDeviceId   = "torchere"
 	torchereDeviceName = "Торшер"
 )
 
 type torchere struct {
+	actionsRegistry common.ActionRegistry
+	tuyaClient      *tuya.TuyaClient
+	smartLifeScenes map[string]string
 }
 
-func InitTorchere() *torchere {
-	return &torchere{}
+func InitTorchere(tuyaClient *tuya.TuyaClient) *torchere {
+	t := &torchere{
+		tuyaClient: tuyaClient,
+	}
+	registry := common.NewActionRegistry()
+	registry.Add(ya_sdk.CapabilityTypeOnOff, ya_sdk.CapabilityInstanceOn, t.switchOnOff)
+	t.actionsRegistry = registry
+	return t
 }
 
 func (d *torchere) GetId() string {
@@ -70,13 +86,58 @@ func (d *torchere) Query() ya_sdk.DeviceState {
 	}
 }
 
-func (d *torchere) Actions([]ya_sdk.CapabilityState) ya_sdk.DeviceActionResult {
-	return ya_sdk.DeviceActionResult{
-		Id: d.GetId(),
-		ActionResult: ya_sdk.ActionResult{
-			Status:       "DONE",
-			ErrorCode:    "",
-			ErrorMessage: "",
-		},
+func (d *torchere) Actions(actions []ya_sdk.CapabilityState) ya_sdk.DeviceActionResult {
+	for _, action := range actions {
+		log.Println(action)
+		if handler := d.actionsRegistry.Get(action.Type, action.State.Instance); handler != nil {
+			if err := handler(action); err != nil {
+				return ya_sdk.CreateDeviceActionResult(d.GetId(), err, "INTERNAL_ERROR", "Случилось что-то непонятное. Подождите немного и попробуйте ещё раз.")
+			}
+		} else {
+			return ya_sdk.CreateDeviceActionResult(d.GetId(), errors.New("INVALID_ACTION"), "INVALID_ACTION", "Это устройство так не умеет. Попробуйте что-нибудь другое.")
+		}
 	}
+	return ya_sdk.CreateDeviceActionResult(d.GetId(), nil, "", "")
+}
+
+func (d *torchere) getSceneId(sceneName string) (string, error) {
+	if len(d.smartLifeScenes) == 0 {
+		scenes, err := d.tuyaClient.GetScenes()
+		if err != nil {
+			return "", err
+		}
+		scenesMap := map[string]string{}
+		for _, scene := range scenes {
+			nameParts := strings.Split(scene.Name, "::")
+			if len(nameParts) != 2 {
+				continue
+			}
+			if nameParts[0] != torchereDeviceId {
+				continue
+			}
+			scenesMap[nameParts[1]] = scene.Id
+		}
+		d.smartLifeScenes = scenesMap
+	}
+	if sceneId, exists := d.smartLifeScenes[sceneName]; exists {
+		return sceneId, nil
+	}
+	return "", errors.Errorf("unknown scene: %s", sceneName)
+}
+
+func (d *torchere) switchOnOff(action ya_sdk.CapabilityState) error {
+	state, ok := action.State.Value.(bool)
+	if !ok {
+		return errors.New("bad state value type")
+	}
+	sceneName := "on"
+	if !state {
+		sceneName = "off"
+	}
+	sceneId, err := d.getSceneId(sceneName)
+	if err != nil {
+		return err
+	}
+	d.tuyaClient.TriggerScene(sceneId)
+	return nil
 }

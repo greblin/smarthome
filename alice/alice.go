@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/greblin/smarthome/devices/living_room"
+	"github.com/greblin/smarthome/tuya"
 	"github.com/greblin/smarthome/ya_sdk"
 )
 
@@ -22,9 +23,9 @@ type AliceModule struct {
 	registry map[string]device
 }
 
-func NewAliceModule() *AliceModule {
+func NewAliceModule(tuyaClient *tuya.TuyaClient) *AliceModule {
 	registry := make(map[string]device, 0)
-	livingRoomTorchere := living_room.InitTorchere()
+	livingRoomTorchere := living_room.InitTorchere(tuyaClient)
 	registry[livingRoomTorchere.GetId()] = livingRoomTorchere
 	return &AliceModule{
 		registry: registry,

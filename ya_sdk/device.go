@@ -90,6 +90,21 @@ type ActionResult struct {
 	ErrorMessage string `json:"error_message"`
 }
 
+func CreateDeviceActionResult(deviceId string, err error, errorCode string, errorMessage string) DeviceActionResult {
+	r := DeviceActionResult{
+		Id:           deviceId,
+		ActionResult: ActionResult{},
+	}
+	if err == nil {
+		r.ActionResult.Status = "DONE"
+	} else {
+		r.ActionResult.Status = "ERROR"
+		r.ActionResult.ErrorCode = errorCode
+		r.ActionResult.ErrorMessage = errorMessage
+	}
+	return r
+}
+
 func (s *CapabilityState) UnmarshalJSON(data []byte) error {
 	sShadow := struct {
 		Type  string `json:"type"`
