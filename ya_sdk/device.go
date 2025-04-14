@@ -3,6 +3,7 @@ package ya_sdk
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	"log"
 )
 
 const (
@@ -119,6 +120,7 @@ func (s *CapabilityState) UnmarshalJSON(data []byte) error {
 	}
 	s.Type = sShadow.Type
 	s.State.Instance = sShadow.State.Instance
+	log.Println(string(data))
 	switch s.Type {
 	case CapabilityTypeOnOff:
 		switch s.State.Instance {
