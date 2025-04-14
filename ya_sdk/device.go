@@ -6,13 +6,14 @@ import (
 )
 
 const (
-	DeviceTypeLight              = "devices.types.light"
-	CapabilityTypeOnOff          = "devices.capabilities.on_off"
-	CapabilityTypeRange          = "devices.capabilities.range"
-	CapabilityTypeColorSettings  = "devices.capabilities.color_setting"
-	CapabilityInstanceOn         = "on"
-	CapabilityInstanceBrightness = "brightness"
-	CapabilityUnitPercent        = "unit.percent"
+	DeviceTypeLight               = "devices.types.light"
+	CapabilityTypeOnOff           = "devices.capabilities.on_off"
+	CapabilityTypeRange           = "devices.capabilities.range"
+	CapabilityTypeColorSettings   = "devices.capabilities.color_setting"
+	CapabilityInstanceOn          = "on"
+	CapabilityInstanceBrightness  = "brightness"
+	CapabilityInstanceTemperature = "temperature_k"
+	CapabilityUnitPercent         = "unit.percent"
 )
 
 type DeviceInfo struct {
@@ -124,15 +125,22 @@ func (s *CapabilityState) UnmarshalJSON(data []byte) error {
 		case CapabilityInstanceOn:
 			if v, ok := sShadow.State.Value.(bool); ok {
 				s.State.Value = v
+				return nil
 			} else {
 				return errors.Errorf("bad value type for type-instance pair: %s %s", s.Type, s.State.Instance)
 			}
-		default:
-			return errors.Errorf("unsupported capability type-instance pair: %s %s", s.Type, s.State.Instance)
 		}
-	default:
-		return errors.Errorf("unsupported capability type: %s", s.Type)
+	case CapabilityTypeColorSettings:
+		switch s.State.Instance {
+		case CapabilityInstanceTemperature:
+			if v, ok := sShadow.State.Value.(float64); ok {
+				s.State.Value = int(v)
+				return nil
+			} else {
+				return errors.Errorf("bad value type for type-instance pair: %s %s", s.Type, s.State.Instance)
+			}
+		}
 	}
 
-	return nil
+	return errors.Errorf("unsupported capability type-instance pair: %s %s", s.Type, s.State.Instance)
 }

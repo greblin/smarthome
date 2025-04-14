@@ -1,11 +1,13 @@
 package living_room
 
 import (
+	"fmt"
 	"github.com/greblin/smarthome/devices/common"
 	"github.com/greblin/smarthome/tuya"
 	"github.com/greblin/smarthome/ya_sdk"
 	"github.com/pkg/errors"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -15,17 +17,20 @@ const (
 )
 
 type torchere struct {
-	actionsRegistry common.ActionRegistry
-	tuyaClient      *tuya.TuyaClient
-	smartLifeScenes map[string]string
+	actionsRegistry      common.ActionRegistry
+	tuyaClient           *tuya.TuyaClient
+	smartLifeScenes      map[string]string
+	supportedTemperature []int
 }
 
 func InitTorchere(tuyaClient *tuya.TuyaClient) *torchere {
 	t := &torchere{
-		tuyaClient: tuyaClient,
+		tuyaClient:           tuyaClient,
+		supportedTemperature: []int{2700, 3200, 5000, 5500, 6500},
 	}
 	registry := common.NewActionRegistry()
 	registry.Add(ya_sdk.CapabilityTypeOnOff, ya_sdk.CapabilityInstanceOn, t.switchOnOff)
+	registry.Add(ya_sdk.CapabilityTypeColorSettings, ya_sdk.CapabilityInstanceTemperature, t.setTemperature)
 	t.actionsRegistry = registry
 	return t
 }
@@ -66,7 +71,7 @@ func (d *torchere) getCapabilities() []ya_sdk.CapabilityInfo {
 			Type:        ya_sdk.CapabilityTypeColorSettings,
 			Retrievable: false,
 			Parameters: ya_sdk.ColorSettingsParameters{
-				Temperature: &ya_sdk.ColorTemperatureRange{Max: 6500, Min: 2700},
+				Temperature: &ya_sdk.ColorTemperatureRange{Max: d.supportedTemperature[len(d.supportedTemperature)-1], Min: d.supportedTemperature[0]},
 			},
 		},
 	}
@@ -134,6 +139,28 @@ func (d *torchere) switchOnOff(action ya_sdk.CapabilityState) error {
 	if !state {
 		sceneName = "off"
 	}
+	sceneId, err := d.getSceneId(sceneName)
+	if err != nil {
+		return err
+	}
+	d.tuyaClient.TriggerScene(sceneId)
+	return nil
+}
+
+func (d *torchere) setTemperature(action ya_sdk.CapabilityState) error {
+	value, ok := action.State.Value.(int)
+	if !ok {
+		return errors.New("bad state value type")
+	}
+	idx, minDiff := -1, 0.0
+	for i, st := range d.supportedTemperature {
+		diff := math.Abs(float64(st - value))
+		if diff < minDiff || idx == -1 {
+			idx = i
+			minDiff = diff
+		}
+	}
+	sceneName := fmt.Sprintf("temp%d", d.supportedTemperature[idx])
 	sceneId, err := d.getSceneId(sceneName)
 	if err != nil {
 		return err
