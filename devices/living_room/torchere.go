@@ -26,11 +26,12 @@ type torchere struct {
 func InitTorchere(tuyaClient *tuya.TuyaClient) *torchere {
 	t := &torchere{
 		tuyaClient:           tuyaClient,
-		supportedTemperature: []int{2700, 3200, 5000, 5500, 6500},
+		supportedTemperature: []int{2700, 3200, 4000, 5000, 5500, 6500},
 	}
 	registry := common.NewActionRegistry()
 	registry.Add(ya_sdk.CapabilityTypeOnOff, ya_sdk.CapabilityInstanceOn, t.switchOnOff)
 	registry.Add(ya_sdk.CapabilityTypeColorSettings, ya_sdk.CapabilityInstanceTemperature, t.setTemperature)
+	registry.Add(ya_sdk.CapabilityTypeRange, ya_sdk.CapabilityInstanceBrightness, t.changeBrightness)
 	t.actionsRegistry = registry
 	return t
 }
@@ -139,12 +140,7 @@ func (d *torchere) switchOnOff(action ya_sdk.CapabilityState) error {
 	if !state {
 		sceneName = "off"
 	}
-	sceneId, err := d.getSceneId(sceneName)
-	if err != nil {
-		return err
-	}
-	d.tuyaClient.TriggerScene(sceneId)
-	return nil
+	return d.triggerScene(sceneName)
 }
 
 func (d *torchere) setTemperature(action ya_sdk.CapabilityState) error {
@@ -161,10 +157,28 @@ func (d *torchere) setTemperature(action ya_sdk.CapabilityState) error {
 		}
 	}
 	sceneName := fmt.Sprintf("temp%d", d.supportedTemperature[idx])
-	sceneId, err := d.getSceneId(sceneName)
+	return d.triggerScene(sceneName)
+}
+
+func (d *torchere) changeBrightness(action ya_sdk.CapabilityState) error {
+	value, ok := action.State.Value.(int)
+	if !ok {
+		return errors.New("bad state value type")
+	}
+	if !action.State.Relative {
+		return errors.Errorf("absolute value not supported for this device")
+	}
+	sceneName := "brightinc"
+	if value < 0 {
+		sceneName = "brightdec"
+	}
+	return d.triggerScene(sceneName)
+}
+
+func (d *torchere) triggerScene(name string) error {
+	sceneId, err := d.getSceneId(name)
 	if err != nil {
 		return err
 	}
-	d.tuyaClient.TriggerScene(sceneId)
-	return nil
+	return d.tuyaClient.TriggerScene(sceneId)
 }

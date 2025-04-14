@@ -1,0 +1,27 @@
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "headers": {
+    "authorization": "##########",
+    "request_id": "3bdf4030-766f-4b9e-a7e4-1327526a3733"
+  },
+  "request_type": "action",
+  "payload": {
+    "devices": [
+      {
+        "id": "torchere",
+        "capabilities": [
+          {
+            "type": "devices.capabilities.range",
+            "state": {
+              "instance": "brightness",
+              "relative": true,
+              "value": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

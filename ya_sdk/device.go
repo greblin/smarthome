@@ -69,6 +69,7 @@ type CapabilityState struct {
 	Type  string `json:"type"`
 	State struct {
 		Instance string `json:"instance"`
+		Relative bool   `json:"relative"`
 		Value    any    `json:"value"`
 	} `json:"state"`
 }
@@ -112,6 +113,7 @@ func (s *CapabilityState) UnmarshalJSON(data []byte) error {
 		Type  string `json:"type"`
 		State struct {
 			Instance string `json:"instance"`
+			Relative bool   `json:"relative"`
 			Value    any    `json:"value"`
 		} `json:"state"`
 	}{}
@@ -135,6 +137,17 @@ func (s *CapabilityState) UnmarshalJSON(data []byte) error {
 	case CapabilityTypeColorSettings:
 		switch s.State.Instance {
 		case CapabilityInstanceTemperature:
+			if v, ok := sShadow.State.Value.(float64); ok {
+				s.State.Value = int(v)
+				return nil
+			} else {
+				return errors.Errorf("bad value type for type-instance pair: %s %s", s.Type, s.State.Instance)
+			}
+		}
+	case CapabilityTypeRange:
+		switch s.State.Instance {
+		case CapabilityInstanceBrightness:
+			s.State.Relative = sShadow.State.Relative
 			if v, ok := sShadow.State.Value.(float64); ok {
 				s.State.Value = int(v)
 				return nil
