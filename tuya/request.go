@@ -33,6 +33,7 @@ func (c *TuyaClient) performRequest(method string, url string, body []byte) ([]b
 	return io.ReadAll(resp.Body)
 }
 
+// @see https://developer.tuya.com/en/docs/iot/new-singnature?id=Kbw0q34cs2e5g
 func (c *TuyaClient) buildHeader(req *http.Request, body []byte) {
 	req.Header.Set(headerClientId, c.clientId)
 	req.Header.Set(headerSignMethod, signMethod)

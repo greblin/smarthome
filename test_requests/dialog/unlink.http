@@ -1,0 +1,10 @@
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "headers": {
+    "authorization":"##########",
+    "request_id":"b490b3c6-479c-4328-96b0-07504d1188a5"
+  },
+  "request_type":"unlink"
+}

@@ -1,8 +1,10 @@
 package ya_sdk
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"net/url"
 )
 
 const (
@@ -10,6 +12,14 @@ const (
 	RequestTypeDiscovery = "discovery"
 	RequestTypeQuery     = "query"
 	RequestTypeAction    = "action"
+)
+
+const (
+	valuesDeviceIdKey        = "deviceId"
+	valuesCapabilityType     = "capType"
+	valuesCapabilityInstance = "capInstance"
+	valuesCapabilityRelative = "capRelative"
+	valuesCapabilityValue    = "capValue"
 )
 
 type Request struct {
@@ -31,10 +41,35 @@ type QueryRequestPayload struct {
 }
 
 type ActionRequestPayload struct {
-	Devices []struct {
-		Id           string            `json:"id"`
-		Capabilities []CapabilityState `json:"capabilities"`
-	} `json:"devices"`
+	Devices []ActionRequestDevice `json:"devices"`
+}
+
+type ActionRequestDevice struct {
+	Id           string             `json:"id"`
+	Capabilities []CapabilityAction `json:"capabilities"`
+}
+
+func CreateActionRequestFromValues(ctx context.Context, values url.Values) (Request, error) {
+	deviceId := values.Get(valuesDeviceIdKey)
+	if deviceId == "" {
+		return Request{}, errors.New("undefined device id")
+	}
+	if action, err := createCapabilityActionFromValues(values); err == nil {
+		return Request{
+			Headers:     Headers{},
+			RequestType: RequestTypeAction,
+			Payload: ActionRequestPayload{
+				Devices: []ActionRequestDevice{
+					{
+						Id:           deviceId,
+						Capabilities: []CapabilityAction{action},
+					},
+				},
+			},
+		}, nil
+	} else {
+		return Request{}, err
+	}
 }
 
 func (rq *Request) UnmarshalJSON(data []byte) error {

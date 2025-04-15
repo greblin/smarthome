@@ -1,4 +1,4 @@
-POST http://localhost:8080/
+POST {{baseUrl}}
 Content-Type: application/json
 
 {
@@ -6,5 +6,12 @@ Content-Type: application/json
     "authorization":"##########",
     "request_id":"b490b3c6-479c-4328-96b0-07504d1188a5"
   },
-  "request_type":"discovery"
+  "request_type":"query",
+  "payload": {
+    "devices": [
+      {
+        "id": "torchere"
+      }
+    ]
+  }
 }

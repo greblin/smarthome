@@ -1,0 +1,29 @@
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.on_off&capInstance=on&capValue=true
+
+@assert 200
+###
+
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.range&capInstance=brightness&capValue=100&capRelative=true
+
+@assert 200
+###
+
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.color_setting&capInstance=temperature_k&capValue=6500
+
+@assert 200
+###
+
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.color_setting&capInstance=temperature_k&capValue=2700
+
+@assert 200
+###
+
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.range&capInstance=brightness&capValue=0&capRelative=true
+
+@assert 200
+###
+
+GET {{baseUrl}}?deviceId=torchere&capType=devices.capabilities.on_off&capInstance=on&capValue=false
+
+@assert 200
+###

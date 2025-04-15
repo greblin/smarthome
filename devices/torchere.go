@@ -1,8 +1,7 @@
-package living_room
+package devices
 
 import (
 	"fmt"
-	"github.com/greblin/smarthome/devices/common"
 	"github.com/greblin/smarthome/tuya"
 	"github.com/greblin/smarthome/ya_sdk"
 	"github.com/pkg/errors"
@@ -17,21 +16,21 @@ const (
 )
 
 type torchere struct {
-	actionsRegistry      common.ActionRegistry
+	actionsRegistry      actionRegistry
 	tuyaClient           *tuya.TuyaClient
 	smartLifeScenes      map[string]string
 	supportedTemperature []int
 }
 
-func InitTorchere(tuyaClient *tuya.TuyaClient) *torchere {
+func NewTorchere(tuyaClient *tuya.TuyaClient) *torchere {
 	t := &torchere{
 		tuyaClient:           tuyaClient,
 		supportedTemperature: []int{2700, 3200, 4000, 5000, 5500, 6500},
 	}
-	registry := common.NewActionRegistry()
-	registry.Add(ya_sdk.CapabilityTypeOnOff, ya_sdk.CapabilityInstanceOn, t.switchOnOff)
-	registry.Add(ya_sdk.CapabilityTypeColorSettings, ya_sdk.CapabilityInstanceTemperature, t.setTemperature)
-	registry.Add(ya_sdk.CapabilityTypeRange, ya_sdk.CapabilityInstanceBrightness, t.changeBrightness)
+	registry := newActionRegistry()
+	registry.add(ya_sdk.CapabilityTypeOnOff, ya_sdk.CapabilityInstanceOn, t.switchOnOff)
+	registry.add(ya_sdk.CapabilityTypeColorSettings, ya_sdk.CapabilityInstanceTemperature, t.setTemperature)
+	registry.add(ya_sdk.CapabilityTypeRange, ya_sdk.CapabilityInstanceBrightness, t.changeBrightness)
 	t.actionsRegistry = registry
 	return t
 }
@@ -44,7 +43,7 @@ func (d *torchere) Discovery() ya_sdk.DeviceInfo {
 	return ya_sdk.DeviceInfo{
 		Id:           d.GetId(),
 		Name:         torchereDeviceName,
-		Room:         roomName,
+		Room:         roomLivingRoom,
 		Type:         ya_sdk.DeviceTypeLight,
 		Capabilities: d.getCapabilities(),
 		Properties:   d.getProperties(),
@@ -85,22 +84,22 @@ func (d *torchere) getProperties() []ya_sdk.PropertyInfo {
 func (d *torchere) Query() ya_sdk.DeviceState {
 	return ya_sdk.DeviceState{
 		Id:           d.GetId(),
-		Capabilities: []ya_sdk.CapabilityState{}, //все умения этого устройства не являются Retrievable, поэтому их можно не включать в ответ
+		Capabilities: []ya_sdk.CapabilityAction{}, //все умения этого устройства не являются Retrievable, поэтому их можно не включать в ответ
 		Properties:   []ya_sdk.PropertyState{},
 		ErrorCode:    "",
 		ErrorMessage: "",
 	}
 }
 
-func (d *torchere) Actions(actions []ya_sdk.CapabilityState) ya_sdk.DeviceActionResult {
+func (d *torchere) Actions(actions []ya_sdk.CapabilityAction) ya_sdk.DeviceActionResult {
 	for _, action := range actions {
 		log.Println(action)
-		if handler := d.actionsRegistry.Get(action.Type, action.State.Instance); handler != nil {
+		if handler := d.actionsRegistry.get(action.Type, action.State.Instance); handler != nil {
 			if err := handler(action); err != nil {
-				return ya_sdk.CreateDeviceActionResult(d.GetId(), err, "INTERNAL_ERROR", "Случилось что-то непонятное. Подождите немного и попробуйте ещё раз.")
+				return ya_sdk.CreateDeviceActionResult(d.GetId(), err, ya_sdk.ErrorCodeInternalError, ya_sdk.ErrorMessageInternalError)
 			}
 		} else {
-			return ya_sdk.CreateDeviceActionResult(d.GetId(), errors.New("INVALID_ACTION"), "INVALID_ACTION", "Это устройство так не умеет. Попробуйте что-нибудь другое.")
+			return ya_sdk.CreateDeviceActionResult(d.GetId(), ErrInvalidAction, ya_sdk.ErrorCodeInvalidAction, ya_sdk.ErrorMessageInvalidAction)
 		}
 	}
 	return ya_sdk.CreateDeviceActionResult(d.GetId(), nil, "", "")
@@ -131,22 +130,22 @@ func (d *torchere) getSceneId(sceneName string) (string, error) {
 	return "", errors.Errorf("unknown scene: %s", sceneName)
 }
 
-func (d *torchere) switchOnOff(action ya_sdk.CapabilityState) error {
+func (d *torchere) switchOnOff(action ya_sdk.CapabilityAction) error {
 	state, ok := action.State.Value.(bool)
 	if !ok {
-		return errors.New("bad state value type")
+		return ErrBadStateValueType
 	}
-	sceneName := "on"
+	sceneName := sceneNameSwitchOn
 	if !state {
-		sceneName = "off"
+		sceneName = sceneNameSwitchOff
 	}
 	return d.triggerScene(sceneName)
 }
 
-func (d *torchere) setTemperature(action ya_sdk.CapabilityState) error {
+func (d *torchere) setTemperature(action ya_sdk.CapabilityAction) error {
 	value, ok := action.State.Value.(int)
 	if !ok {
-		return errors.New("bad state value type")
+		return ErrBadStateValueType
 	}
 	idx, minDiff := -1, 0.0
 	for i, st := range d.supportedTemperature {
@@ -156,21 +155,21 @@ func (d *torchere) setTemperature(action ya_sdk.CapabilityState) error {
 			minDiff = diff
 		}
 	}
-	sceneName := fmt.Sprintf("temp%d", d.supportedTemperature[idx])
+	sceneName := fmt.Sprintf("%s%d", sceneNameChangeTempPrefix, d.supportedTemperature[idx])
 	return d.triggerScene(sceneName)
 }
 
-func (d *torchere) changeBrightness(action ya_sdk.CapabilityState) error {
+func (d *torchere) changeBrightness(action ya_sdk.CapabilityAction) error {
 	value, ok := action.State.Value.(int)
 	if !ok {
-		return errors.New("bad state value type")
+		return ErrBadStateValueType
 	}
 	if !action.State.Relative {
-		return errors.Errorf("absolute value not supported for this device")
+		return ErrNotSupportedAbsValue
 	}
-	sceneName := "brightinc"
+	sceneName := sceneNameBrightnessInc
 	if value < 0 {
-		sceneName = "brightdec"
+		sceneName = sceneNameBrightnessDec
 	}
 	return d.triggerScene(sceneName)
 }
@@ -178,7 +177,10 @@ func (d *torchere) changeBrightness(action ya_sdk.CapabilityState) error {
 func (d *torchere) triggerScene(name string) error {
 	sceneId, err := d.getSceneId(name)
 	if err != nil {
-		return err
+		return errors.Wrap(err, ErrSceneSystemError.Error())
 	}
-	return d.tuyaClient.TriggerScene(sceneId)
+	if err := d.tuyaClient.TriggerScene(sceneId); err != nil {
+		return errors.Wrap(err, ErrSceneSystemError.Error())
+	}
+	return nil
 }

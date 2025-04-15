@@ -2,34 +2,23 @@ package tuya
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 )
 
-type tuyaTokenResponse struct {
-	Result struct {
-		AccessToken  string `json:"access_token"`
-		ExpireTime   int    `json:"expire_time"`
-		RefreshToken string `json:"refresh_token"`
-		UID          string `json:"uid"`
-	} `json:"result"`
-	Success bool  `json:"success"`
-	T       int64 `json:"t"`
-}
+const (
+	endpointReceiveToken = "/v1.0/token?grant_type=1"
+	endpointGetScenes    = "/v2.0/cloud/scene/rule?space_id=%s"
+	endpointTriggerScene = "/v2.0/cloud/scene/rule/%s/actions/trigger"
+)
 
-type TuyaScene struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type tuyaScenesResponse struct {
-	Result struct {
-		List []TuyaScene `json:"list"`
-	}
-	Success bool `json:"success"`
-}
+var (
+	ErrRequestFailed               = errors.New("request failed")
+	ErrResponseUnmarshalilngFailed = errors.New("response unmarshalling failed")
+	ErrResultIsNotSuccess          = errors.New("result is not success")
+)
 
 type TuyaClient struct {
 	host     string
@@ -49,60 +38,71 @@ func NewTuyaClient(host, clientId, secret, spaceId string) *TuyaClient {
 	}
 }
 
+// @see https://developer.tuya.com/en/docs/cloud/6c1636a9bd?id=Ka7kjumkoa53v
 func (c *TuyaClient) receiveToken() error {
-	resp, err := c.performRequest(http.MethodGet, "/v1.0/token?grant_type=1&aaa=bar", nil)
+	resp, err := c.performRequest(http.MethodGet, endpointReceiveToken, nil)
 	if err != nil {
 		log.Println(err)
-		return err
+		return errors.Wrap(err, ErrRequestFailed.Error())
 	}
-	log.Println("resp:", string(resp))
+	log.Println("tuya token response: ", string(resp))
 	tokenResp := tuyaTokenResponse{}
 	if err := json.Unmarshal(resp, &tokenResp); err != nil {
 		log.Println(err)
-		return err
+		return errors.Wrap(err, ErrResponseUnmarshalilngFailed.Error())
 	}
 	if v := tokenResp.Result.AccessToken; v != "" {
 		c.token = v
 	} else {
-		//todo
+		return ErrResultIsNotSuccess
 	}
 	return nil
 }
 
-func (c *TuyaClient) GetScenes() ([]TuyaScene, error) {
+// @see https://developer.tuya.com/en/docs/cloud/d7785d8964?id=Kcp2l4i0bo315
+func (c *TuyaClient) GetScenes() ([]tuyaScene, error) {
 	if c.token == "" {
 		if err := c.receiveToken(); err != nil {
 			return nil, err
 		}
 	}
-	resp, err := c.performRequest(http.MethodGet, fmt.Sprintf("/v2.0/cloud/scene/rule?space_id=%s", c.spaceId), nil)
+	resp, err := c.performRequest(http.MethodGet, fmt.Sprintf(endpointGetScenes, c.spaceId), nil)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, errors.Wrap(err, ErrRequestFailed.Error())
 	}
-	log.Println("resp:", string(resp))
+	log.Println("tuya getScenes response: ", string(resp))
 	scenesResp := tuyaScenesResponse{}
 	if err := json.Unmarshal(resp, &scenesResp); err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, errors.Wrap(err, ErrResponseUnmarshalilngFailed.Error())
 	}
 	if scenesResp.Success {
 		return scenesResp.Result.List, nil
 	}
-	return nil, errors.New("some error") //todo
+	return nil, ErrResultIsNotSuccess
 }
 
+// @see https://developer.tuya.com/en/docs/cloud/89b2c8538b?id=Kcp2l54tos47r
 func (c *TuyaClient) TriggerScene(sceneId string) error {
 	if c.token == "" {
 		if err := c.receiveToken(); err != nil {
 			return err
 		}
 	}
-	resp, err := c.performRequest(http.MethodPost, fmt.Sprintf("/v2.0/cloud/scene/rule/%s/actions/trigger", sceneId), nil)
+	resp, err := c.performRequest(http.MethodPost, fmt.Sprintf(endpointTriggerScene, sceneId), nil)
 	if err != nil {
 		log.Println(err)
-		return err
+		return errors.Wrap(err, ErrRequestFailed.Error())
 	}
-	log.Println("resp:", string(resp))
-	return nil
+	log.Println("tuya triggerScene resp:", string(resp))
+	triggerResp := tuyaTriggerSceneResponse{}
+	if err := json.Unmarshal(resp, &triggerResp); err != nil {
+		log.Println(err)
+		return errors.Wrap(err, ErrResponseUnmarshalilngFailed.Error())
+	}
+	if triggerResp.Success {
+		return nil
+	}
+	return ErrResultIsNotSuccess
 }
